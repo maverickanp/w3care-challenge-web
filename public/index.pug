@@ -1,0 +1,79 @@
+head
+    meta(charset='UTF-8')
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title chat-app
+    link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css")
+    link(rel="stylesheet", href="css/style.css")
+body
+    div.chat-container
+        header.chat-header
+            h1
+                i.fas.fa-smile w3care-challenge-web
+            a.btn(href="index.html") Leave Room
+        main.chat-main
+            div.chat-sidebar
+                h3
+                i.fas.fa-comments Room Name:
+                h3
+                i.fas.fa-users Users
+                ul#users
+            div.chat-messages
+        div.chat-form-container
+            form#chat-form
+                input#msg(type="text" placeholder="Enter Message" required autocomplete="off")
+                button.btn
+                    i.fas.fa-paper-plane Send
+script(src='js/qs.min.js')
+script(src='http://localhost:7781/socket.io/socket.io.js')
+script.
+    // Get username and room from URL
+    var { user, room } = Qs.parse(location.search, {
+    ignoreQueryPrefix: true
+    });
+script.
+    var socket = io('http://localhost:7781');
+
+    socket.on('message', (user, room, message) => {
+        console.log(user, room, message);
+        outputMessage(user, room, message);
+        
+    });
+
+    socket.emit('joinRoom', user, room);
+    
+    document.querySelector('#chat-form').onsubmit = event => {
+        event.preventDefault();
+        
+        // Get message text
+        let msg = event.target.elements.msg.value;
+        msg = msg.trim();
+  
+        socket.emit('message', user, room, msg);
+        outputMessage(user, room, msg)
+        
+        // Scroll down
+        const chatMessages = document.querySelector('.chat-messages')
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function outputMessage(user, room, message){
+        const div = document.createElement('div');
+        div.classList.add('message');
+        const p = document.createElement('p');
+        p.classList.add('meta');
+        p.innerText = user;
+        p.innerHTML += ` <span>${currentTime()}</span>`;
+        div.appendChild(p);
+        const para = document.createElement('p');
+        para.classList.add('text');
+        para.innerText = message;
+        div.appendChild(para);
+        document.querySelector('.chat-messages').appendChild(div);
+    }
+
+    function currentTime(){
+        var today = new Date();
+        var date = `${today.getHours()}:${today.getMinutes()}`;
+        //var formattedDate = `${today.getHours() < 10 ? }`
+        return date;
+    }
